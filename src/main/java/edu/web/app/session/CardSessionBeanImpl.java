@@ -8,6 +8,7 @@ import edu.web.app.entity.TransactionStatus;
 import edu.web.app.exception.UserBannedException;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -43,6 +44,7 @@ public class CardSessionBeanImpl implements CardSessionBean {
          entity.setPinCode("0000");
          entity.setMeta("Credit card for user with id " + id);
          entity.setType(type);
+         entity.setCardNumber(RandomStringUtils.randomNumeric(16));
 
          CollectionUtils.emptyIfNull(client.getCards()).add(entity);
 

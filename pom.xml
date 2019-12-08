@@ -111,4 +111,17 @@
             <version>42.2.8</version>
         </dependency>
     </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.openejb.maven</groupId>
+                <artifactId>tomee-maven-plugin</artifactId>
+                <version>7.0.6</version>
+                <configuration>
+                    <tomeeVersion>7.0.6</tomeeVersion>
+                    <tomeeClassifier>webprofile</tomeeClassifier>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>

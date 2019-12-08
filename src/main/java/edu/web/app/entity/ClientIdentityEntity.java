@@ -41,7 +41,7 @@ public class ClientIdentityEntity implements Serializable {
    @Column(name = "address")
    private String address;
 
-   @OneToMany(mappedBy = "owner", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+   @OneToMany(mappedBy = "owner", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
    private List<CardEntity> cards;
 
    @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)

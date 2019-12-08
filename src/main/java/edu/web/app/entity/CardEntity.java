@@ -52,7 +52,7 @@ public class CardEntity implements Serializable {
    @Column(name = "meta")
    private String meta;
 
-   @ManyToOne(fetch = FetchType.LAZY)
+   @ManyToOne(fetch = FetchType.EAGER)
    @JoinColumn(name = "client_id")
    private ClientIdentityEntity owner;
 

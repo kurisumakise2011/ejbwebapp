@@ -51,7 +51,7 @@ public class FrontController extends HttpServlet {
    private Key lookup(String path, HttpMethod method) {
       Set<Key> keys = commands.keySet();
       for (Key key : keys) {
-         if (key.method == method && path.matches(key.url)) {
+         if (key.method == method && (path.matches(key.url) || key.url.contains(path))) {
             return key;
          }
       }
@@ -140,7 +140,8 @@ public class FrontController extends HttpServlet {
       super.init(config);
       commands.put(new Key("/atm/withdrawal/.*", HttpMethod.POST), cardCommandHolder.atmOperation());
       commands.put(new Key("/atm/transfer/.*", HttpMethod.POST), cardCommandHolder.atmOperation());
-      commands.put(new Key("/atm/balance/.*", HttpMethod.POST), cardCommandHolder.atmOperation());
+      commands.put(new Key("/atm/balance", HttpMethod.POST), cardCommandHolder.atmOperation());
+      commands.put(new Key("/atm", HttpMethod.POST), cardCommandHolder.atmOperation());
       commands.put(new Key("/atm/replenish/.*", HttpMethod.POST), cardCommandHolder.atmOperation());
       commands.put(new Key("/client", HttpMethod.GET), clientCommandHolder.getClientByIdentifier());
       commands.put(new Key("/cards", HttpMethod.GET), cardCommandHolder.getCards());

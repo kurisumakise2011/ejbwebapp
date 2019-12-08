@@ -10,6 +10,7 @@ import edu.web.app.exception.RegistrationCollectedException;
 import edu.web.app.exception.RegistrationException;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -127,6 +128,7 @@ public class AuthenticationUserServiceSessionBeanImpl implements AuthenticationU
       entity.setPinCode("0000");
       entity.setMeta("The first USD debit card of user " + email);
       entity.setType(CardType.DEBIT);
+      entity.setCardNumber(RandomStringUtils.randomNumeric(16));
 
       return entity;
    }

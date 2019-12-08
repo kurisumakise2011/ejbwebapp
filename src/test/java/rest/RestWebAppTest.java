@@ -6,11 +6,12 @@ import com.google.gson.reflect.TypeToken;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.config.ObjectMapperConfig;
 import com.jayway.restassured.config.RestAssuredConfig;
-import com.jayway.restassured.internal.RestAssuredResponseImpl;
 import com.jayway.restassured.internal.mapper.ObjectMapperType;
-import com.jayway.restassured.response.Cookie;
 import com.jayway.restassured.response.Response;
 import com.jayway.restassured.response.ResponseBody;
+import edu.web.app.client.Atm;
+import edu.web.app.dto.AtmReq;
+import edu.web.app.dto.AtmResp;
 import edu.web.app.dto.CardDto;
 import edu.web.app.dto.ClientDto;
 import edu.web.app.dto.Credentials;
@@ -25,6 +26,7 @@ import org.junit.Test;
 import javax.persistence.EntityManager;
 import javax.persistence.Persistence;
 import java.lang.reflect.Type;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
@@ -32,7 +34,6 @@ import java.util.List;
 import java.util.Set;
 
 import static com.jayway.restassured.RestAssured.given;
-import static com.jayway.restassured.RestAssured.when;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
@@ -249,4 +250,481 @@ public class RestWebAppTest {
       assertThat(list.size(), is(1));
    }
 
+   @Test
+   public void should_work_with_atm() {
+      SignupRequest signupRequest = new SignupRequest();
+
+      signupRequest.setEmail("simplemail@gmail.com");
+      signupRequest.setPassword("123456");
+      signupRequest.setName("Username");
+      signupRequest.setAddress("Line 123");
+      signupRequest.setCode("123456");
+      signupRequest.setSerial("ET1000000");
+      signupRequest.setDescription("Description");
+      signupRequest.setPhone("380674892810");
+
+      given().
+            contentType("application/json").
+            body(signupRequest).
+            when().
+            post("http://localhost:8080/signup").
+            then()
+            .assertThat().statusCode(201);
+
+      Credentials credentials = new Credentials();
+
+      credentials.setLogin(signupRequest.getPhone());
+      credentials.setPassword(signupRequest.getPassword());
+
+      Response response = given().
+            contentType("application/json").
+            body(credentials).
+            when().
+            post("http://localhost:8080/signin").
+            thenReturn();
+
+      ResponseBody body =
+            given().
+                  cookie("JSESSIONID", response.getSessionId()).
+                  when().
+                  get("http://localhost:8080/cards").
+                  thenReturn().
+                  getBody();
+
+      String json = body.prettyPrint();
+      Type listType = new TypeToken<ArrayList<CardDto>>(){}.getType();
+      List<CardDto> list = gson.fromJson(json, listType);
+      assertThat(list.size(), is(1));
+
+      CardDto card = list.iterator().next();
+
+      AtmReq atmReq = new AtmReq();
+      atmReq.setCard(card.getCardNumber());
+
+      body =
+            given().
+                  body(atmReq).
+                  cookie("JSESSIONID", response.getSessionId()).
+                  when().
+                  post("http://localhost:8080/atm").
+                  thenReturn().
+                  getBody();
+
+      json = body.prettyPrint();
+      System.out.println(json);
+      System.out.println("Your session id is " + response.getSessionId());
+   }
+
+   @Test
+   public void should_check_balance_on_card() {
+      SignupRequest signupRequest = new SignupRequest();
+
+      signupRequest.setEmail("simplemail@gmail.com");
+      signupRequest.setPassword("123456");
+      signupRequest.setName("Username");
+      signupRequest.setAddress("Line 123");
+      signupRequest.setCode("123456");
+      signupRequest.setSerial("ET1000000");
+      signupRequest.setDescription("Description");
+      signupRequest.setPhone("380674892810");
+
+      given().
+            contentType("application/json").
+            body(signupRequest).
+            when().
+            post("http://localhost:8080/signup").
+            then()
+            .assertThat().statusCode(201);
+
+      Credentials credentials = new Credentials();
+
+      credentials.setLogin(signupRequest.getPhone());
+      credentials.setPassword(signupRequest.getPassword());
+
+      Response response = given().
+            contentType("application/json").
+            body(credentials).
+            when().
+            post("http://localhost:8080/signin").
+            thenReturn();
+
+      ResponseBody body =
+            given().
+                  cookie("JSESSIONID", response.getSessionId()).
+                  when().
+                  get("http://localhost:8080/cards").
+                  thenReturn().
+                  getBody();
+
+      String json = body.prettyPrint();
+      Type listType = new TypeToken<ArrayList<CardDto>>(){}.getType();
+      List<CardDto> list = gson.fromJson(json, listType);
+      assertThat(list.size(), is(1));
+
+      CardDto card = list.iterator().next();
+
+      AtmReq atmReq = new AtmReq();
+      atmReq.setCard(card.getCardNumber());
+
+      body =
+            given().
+                  body(atmReq).
+                  cookie("JSESSIONID", response.getSessionId()).
+                  when().
+                  post("http://localhost:8080/atm").
+                  thenReturn().
+                  getBody();
+
+      body.prettyPrint();
+      System.out.println("Your session id is " + response.getSessionId());
+
+      // Enters pincode
+      atmReq.setPincode("0000");
+
+      body =
+            given().
+                  body(atmReq).
+                  cookie("JSESSIONID", response.getSessionId()).
+                  when().
+                  post("http://localhost:8080/atm").
+                  thenReturn().
+                  getBody();
+
+      body.prettyPrint();
+      System.out.println("Your session id is " + response.getSessionId());
+
+      atmReq.setOption(Atm.AtmOption.BALANCE);
+      body =
+            given().
+                  body(atmReq).
+                  cookie("JSESSIONID", response.getSessionId()).
+                  when().
+                  post("http://localhost:8080/atm").
+                  thenReturn().
+                  getBody();
+
+      body.prettyPrint();
+      System.out.println("Your session id is " + response.getSessionId());
+
+      body =
+            given().
+                  body(atmReq).
+                  cookie("JSESSIONID", response.getSessionId()).
+                  when().
+                  post("http://localhost:8080/atm/balance").
+                  thenReturn().
+                  getBody();
+
+      body.prettyPrint();
+      System.out.println("Your session id is " + response.getSessionId());
+   }
+
+   @Test
+   public void should_replenish_balance_card() {
+      SignupRequest signupRequest = new SignupRequest();
+
+      signupRequest.setEmail("simplemail@gmail.com");
+      signupRequest.setPassword("123456");
+      signupRequest.setName("Username");
+      signupRequest.setAddress("Line 123");
+      signupRequest.setCode("123456");
+      signupRequest.setSerial("ET1000000");
+      signupRequest.setDescription("Description");
+      signupRequest.setPhone("380674892810");
+
+      given().
+            contentType("application/json").
+            body(signupRequest).
+            when().
+            post("http://localhost:8080/signup").
+            then()
+            .assertThat().statusCode(201);
+
+      Credentials credentials = new Credentials();
+
+      credentials.setLogin(signupRequest.getPhone());
+      credentials.setPassword(signupRequest.getPassword());
+
+      Response response = given().
+            contentType("application/json").
+            body(credentials).
+            when().
+            post("http://localhost:8080/signin").
+            thenReturn();
+
+      ResponseBody body =
+            given().
+                  cookie("JSESSIONID", response.getSessionId()).
+                  when().
+                  get("http://localhost:8080/cards").
+                  thenReturn().
+                  getBody();
+
+      String json = body.prettyPrint();
+      Type listType = new TypeToken<ArrayList<CardDto>>(){}.getType();
+      List<CardDto> list = gson.fromJson(json, listType);
+      assertThat(list.size(), is(1));
+
+      CardDto card = list.iterator().next();
+
+      AtmReq atmReq = new AtmReq();
+      atmReq.setCard(card.getCardNumber());
+
+      body =
+            given().
+                  body(atmReq).
+                  cookie("JSESSIONID", response.getSessionId()).
+                  when().
+                  post("http://localhost:8080/atm").
+                  thenReturn().
+                  getBody();
+
+      body.prettyPrint();
+      System.out.println("Your session id is " + response.getSessionId());
+
+      // Enters pincode
+      atmReq.setPincode("0000");
+
+      body =
+            given().
+                  body(atmReq).
+                  cookie("JSESSIONID", response.getSessionId()).
+                  when().
+                  post("http://localhost:8080/atm").
+                  thenReturn().
+                  getBody();
+
+      body.prettyPrint();
+      System.out.println("Your session id is " + response.getSessionId());
+
+      atmReq.setOption(Atm.AtmOption.REPLENISH);
+      body =
+            given().
+                  body(atmReq).
+                  cookie("JSESSIONID", response.getSessionId()).
+                  when().
+                  post("http://localhost:8080/atm").
+                  thenReturn().
+                  getBody();
+
+      body.prettyPrint();
+      System.out.println("Your session id is " + response.getSessionId());
+
+      atmReq.setAmount(BigDecimal.valueOf(100));
+      body =
+            given().
+                  body(atmReq).
+                  cookie("JSESSIONID", response.getSessionId()).
+                  when().
+                  post("http://localhost:8080/atm/replenish").
+                  thenReturn().
+                  getBody();
+
+      body.prettyPrint();
+      System.out.println("Your session id is " + response.getSessionId());
+
+      // check balance in card
+      body =
+            given().
+                  cookie("JSESSIONID", response.getSessionId()).
+                  when().
+                  get("http://localhost:8080/cards").
+                  thenReturn().
+                  getBody();
+
+      body.prettyPrint();
+      System.out.println("Your session id is " + response.getSessionId());
+   }
+
+   @Test
+   public void should_withdrawal_money_after_putting() {
+      SignupRequest signupRequest = new SignupRequest();
+
+      signupRequest.setEmail("simplemail@gmail.com");
+      signupRequest.setPassword("123456");
+      signupRequest.setName("Username");
+      signupRequest.setAddress("Line 123");
+      signupRequest.setCode("123456");
+      signupRequest.setSerial("ET1000000");
+      signupRequest.setDescription("Description");
+      signupRequest.setPhone("380674892810");
+
+      given().
+            contentType("application/json").
+            body(signupRequest).
+            when().
+            post("http://localhost:8080/signup").
+            then()
+            .assertThat().statusCode(201);
+
+      Credentials credentials = new Credentials();
+
+      credentials.setLogin(signupRequest.getPhone());
+      credentials.setPassword(signupRequest.getPassword());
+
+      Response response = given().
+            contentType("application/json").
+            body(credentials).
+            when().
+            post("http://localhost:8080/signin").
+            thenReturn();
+
+      ResponseBody body =
+            given().
+                  cookie("JSESSIONID", response.getSessionId()).
+                  when().
+                  get("http://localhost:8080/cards").
+                  thenReturn().
+                  getBody();
+
+      String json = body.prettyPrint();
+      Type listType = new TypeToken<ArrayList<CardDto>>(){}.getType();
+      List<CardDto> list = gson.fromJson(json, listType);
+      assertThat(list.size(), is(1));
+
+      CardDto card = list.iterator().next();
+
+      AtmReq atmReq = new AtmReq();
+      atmReq.setCard(card.getCardNumber());
+
+      body =
+            given().
+                  body(atmReq).
+                  cookie("JSESSIONID", response.getSessionId()).
+                  when().
+                  post("http://localhost:8080/atm").
+                  thenReturn().
+                  getBody();
+
+      body.prettyPrint();
+      System.out.println("Your session id is " + response.getSessionId());
+
+      // Enters pincode
+      atmReq.setPincode("0000");
+
+      body =
+            given().
+                  body(atmReq).
+                  cookie("JSESSIONID", response.getSessionId()).
+                  when().
+                  post("http://localhost:8080/atm").
+                  thenReturn().
+                  getBody();
+
+      body.prettyPrint();
+      System.out.println("Your session id is " + response.getSessionId());
+
+      atmReq.setOption(Atm.AtmOption.REPLENISH);
+      body =
+            given().
+                  body(atmReq).
+                  cookie("JSESSIONID", response.getSessionId()).
+                  when().
+                  post("http://localhost:8080/atm").
+                  thenReturn().
+                  getBody();
+
+      body.prettyPrint();
+      System.out.println("Your session id is " + response.getSessionId());
+
+      atmReq.setAmount(BigDecimal.valueOf(1000));
+      body =
+            given().
+                  body(atmReq).
+                  cookie("JSESSIONID", response.getSessionId()).
+                  when().
+                  post("http://localhost:8080/atm/replenish").
+                  thenReturn().
+                  getBody();
+
+      body.prettyPrint();
+      System.out.println("Your session id is " + response.getSessionId());
+
+      // withdrawal
+
+      atmReq = new AtmReq();
+      atmReq.setCard(card.getCardNumber());
+
+      body =
+            given().
+                  body(atmReq).
+                  cookie("JSESSIONID", response.getSessionId()).
+                  when().
+                  post("http://localhost:8080/atm").
+                  thenReturn().
+                  getBody();
+
+      body.prettyPrint();
+      System.out.println("Your session id is " + response.getSessionId());
+
+      // Enters pincode
+      atmReq.setPincode("0000");
+
+      body =
+            given().
+                  body(atmReq).
+                  cookie("JSESSIONID", response.getSessionId()).
+                  when().
+                  post("http://localhost:8080/atm").
+                  thenReturn().
+                  getBody();
+
+      body.prettyPrint();
+      System.out.println("Your session id is " + response.getSessionId());
+
+      atmReq.setOption(Atm.AtmOption.WITHDRAWAL);
+      body =
+            given().
+                  body(atmReq).
+                  cookie("JSESSIONID", response.getSessionId()).
+                  when().
+                  post("http://localhost:8080/atm").
+                  thenReturn().
+                  getBody();
+
+      body.prettyPrint();
+      System.out.println("Your session id is " + response.getSessionId());
+
+      atmReq.setAmount(BigDecimal.valueOf(500));
+      body =
+            given().
+                  body(atmReq).
+                  cookie("JSESSIONID", response.getSessionId()).
+                  when().
+                  post("http://localhost:8080/atm/withdrawal/500").
+                  thenReturn().
+                  getBody();
+
+      body.prettyPrint();
+      System.out.println("Your session id is " + response.getSessionId());
+
+      body =
+            given().
+                  body(atmReq).
+                  cookie("JSESSIONID", response.getSessionId()).
+                  when().
+                  post("http://localhost:8080/atm/withdrawal/500").
+                  thenReturn().
+                  getBody();
+
+      body.prettyPrint();
+      System.out.println("Your session id is " + response.getSessionId());
+
+      // check balance in card
+      body =
+            given().
+                  cookie("JSESSIONID", response.getSessionId()).
+                  when().
+                  get("http://localhost:8080/cards").
+                  thenReturn().
+                  getBody();
+
+      body.prettyPrint();
+      System.out.println("Your session id is " + response.getSessionId());
+   }
+
+   @Test
+   public void should_create_a_new_card_and_transfer_money_to_it() {
+
+   }
 }

@@ -29,7 +29,8 @@ public class AtmTakeCache implements AtmState {
          } else {
             BigDecimal current = atm.getCurrent();
             atm.setCurrent(current.add(withdrawal.negate()));
-            card.setCurrentAmount(current.add(withdrawal.negate()));
+
+            card.setCurrentAmount(amountOnCard.add(withdrawal.negate()));
             atm.setMessage("Please take your money in amount " + withdrawal);
          }
       } else {

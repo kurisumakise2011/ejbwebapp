@@ -10,13 +10,13 @@ import edu.web.app.session.ClientIdentitySessionBean;
 import edu.web.app.session.PaymentTransactionSessionBean;
 import org.apache.commons.lang3.BooleanUtils;
 
-import javax.ejb.Stateful;
+import javax.ejb.Stateless;
 import javax.inject.Inject;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Stateful
+@Stateless
 public class AtmClientServiceImpl implements AtmClientService {
    @Inject
    public CardSessionBean cardSessionBean;
@@ -59,6 +59,10 @@ public class AtmClientServiceImpl implements AtmClientService {
 
    private Atm enhanceAtm(AtmReq req) {
       Atm atm = atms.get(RequestContext.getAtmKey());
+
+      if (req == null) {
+         return atm;
+      }
 
       atm.setWithdrawal(req.getAmount());
       atm.setPincode(req.getPincode());

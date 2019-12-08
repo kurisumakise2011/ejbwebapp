@@ -9,7 +9,7 @@ import java.util.List;
 public class AtmTransferState implements AtmState {
    @Override
    public void next(Atm atm) {
-
+      atm.setState(new AtmTransferMoneyState());
    }
 
    @Override

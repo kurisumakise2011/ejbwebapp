@@ -24,9 +24,11 @@ public class AtmPincodeState implements AtmState {
             card.setActive(false);
             atm.setMessage("Your card has been blocked, please contact a bank department to restore card");
          } else {
+            atm.setMessage("Invalid pincode");
             atm.setAttempts(attempts - 1);
          }
       } else {
+         atm.setMessage("Correct pincode.");
          atm.setAttempts(3);
       }
    }
